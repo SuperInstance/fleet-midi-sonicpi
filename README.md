@@ -2,7 +2,7 @@
 
 # 💫 fleet-midi-sonicpi
 
-> *Timing-critical MIDI clock for fleet agents*
+> *Timing-critical MIDI clock patterns for fleet agents*
 
 [![CI](https://img.shields.io/github/actions/workflow/status/SuperInstance/fleet-midi-sonicpi/ci.yml?style=flat-square&logo=github&label=CI)](https://github.com/SuperInstance/fleet-midi-sonicpi/actions)
 [![npm](https://img.shields.io/badge/npm-%40superinstance%2Fmidi--sonicpi-cb3837?style=flat-square&logo=npm)](https://www.npmjs.com/package/@superinstance/midi-sonicpi)
@@ -12,7 +12,7 @@
 
 ---
 
-Generates Sonic Pi live_loop patterns from agent note data. Strict timing guarantees keep complex generative loops in sync. HTTP endpoint turns fleet decision states into playable Sonic Pi code with use_bpm synchronization.
+Generates Sonic Pi live_loop patterns from agent note data. Strict timing guarantees keep complex generative loops in sync. HTTP endpoint turns fleet decisions into playable Sonic Pi code.
 
 ---
 
@@ -32,22 +32,51 @@ git clone https://github.com/SuperInstance/fleet-midi-sonicpi.git
 ## 🚀 Quick Start
 
 ```bash
-# see Getting Started below
+# POST notes, get Sonic Pi code:
+curl -X POST localhost:3006 \
+  -H "Content-Type: application/json" \
+  -d "{\"notes\":[60,64,67,72],\"bpm\":120}"
+
+# Direct import:
+from lib.server import sonici_pi_pattern
+code = sonici_pi_pattern([60,64,67,60,67,64], 90)
+print(code)
 ```
 
 ## 🏗️ Architecture
 
 ```
-Coming soon
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│   Fleet Note Data           Sonic Pi Code            │
+│   [60, 64, 67, 72]          live_loop :fleet_agent  │
+│         │                    play :C4                │
+│         ▼                    sleep 0.5               │
+│   ┌──────────────┐          play :E4                │
+│   │ Pattern      │───▶      sleep 0.5               │
+│   │ Builder      │          play :G4                │
+│   └──────────────┘          sleep 0.5               │
+│         │                   end                      │
+│         ▼                                            │
+│   HTTP POST :3006/notes  →  Ready for Sonic Pi paste │
+│                                                     │
+│   Timing-exact: use_bpm keeps everything in sync     │
+└─────────────────────────────────────────────────────┘
 ```
 
 ## 📡 API
 
-See source code for endpoints.
+### POST /notes
+Send note list and BPM → receive executable Sonic Pi live_loop code.
+
+```json
+{"notes": [60, 64, 67, 72], "bpm": 120}
+```
+→ Returns `use_bpm 120` live_loop with `play :C4, sleep 0.5` pattern.
 
 ## 🧪 Beta Tested
 
-Part of the [SuperInstance MIDI Fleet](https://github.com/SuperInstance/construct-coordination/blob/main/FLEET_MIDI.md). Zeroshot-verified on every push via CI.
+Part of the [SuperInstance MIDI Fleet](https://github.com/SuperInstance/construct-coordination/blob/main/FLEET_MIDI.md). Every push verified via CI — zeroshot tests ensure zero-config operation out of the box.
 
 ## 🤝 Related
 
